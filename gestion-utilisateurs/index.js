@@ -9,9 +9,22 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 // Health check
 app.get('/api/health', async (req, res) => {
-// À COMPLÉTER
-// Testez la connexion avec SELECT NOW()
+    try {
+        const result = await pool.query('SELECT NOW()');
+        res.json({
+            status: 'OK',
+            database: 'Connected',
+            time: result.rows[0].now
+        });
+    } catch (err) {
+        console.error('Erreur connexion DB:', err);
+        res.status(500).json({
+            status: 'ERROR',
+            message: 'Impossible de se connecter à la base'
+        });
+    }
 });
+
 app.listen(PORT, () => {
 console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
 });
