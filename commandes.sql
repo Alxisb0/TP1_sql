@@ -230,3 +230,31 @@ WHERE succes = false
     AND date_heure >= CURRENT_DATE - INTERVAL '7 days'
 GROUP BY DATE(date_heure)
 ORDER BY jour DESC;
+
+
+
+
+
+
+CREATE OR REPLACE FUNCTION est_token_valide(p_token VARCHAR)
+RETURNS BOOLEAN AS $$
+BEGIN
+RETURN EXISTS (
+SELECT 1
+FROM sessions s
+INNER JOIN utilisateurs u ON s.utilisateur_id = u.id
+WHERE s.token = p_token
+AND s.actif = true
+AND s.date_expiration > CURRENT_TIMESTAMP
+AND u.actif = true
+);
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+
+-- TASK 26 
+
+-- token retourné : "1f3d8e3a-a031-4116-8ace-8c83d56761e5"
+

@@ -168,4 +168,54 @@ router.get('/profile', requireAuth, async (req, res) => {
 
 
 
+// POST /api/auth/logout
+router.post('/logout', requireAuth, async (req, res) => {
+  const token = req.headers['authorization'];
+
+  try {
+    await pool.query(
+      'UPDATE sessions SET actif = false WHERE token = $1',
+      [token]
+    );
+
+    await pool.query(
+      `INSERT INTO logs_connexion
+       (utilisateur_id, email_tentative, succes, message)
+       VALUES ($1, $2, true, 'Déconnexion')`,
+      [req.user.utilisateur_id, req.user.email]
+    );
+
+    res.json({ message: 'Déconnexion réussie' });
+
+  } catch (error) {
+    console.error('Erreur logout:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+
+// GET /api/auth/logs
+router.get('/logs', requireAuth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT *
+       FROM logs_connexion
+       WHERE utilisateur_id = $1
+       ORDER BY date_heure DESC
+       LIMIT 50`,
+      [req.user.utilisateur_id]
+    );
+
+    res.json({ logs: result.rows });
+
+  } catch (error) {
+    console.error('Erreur logs:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+
+
 module.exports = router;
