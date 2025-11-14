@@ -135,4 +135,37 @@ router.post('/login', async (req, res) => {
 
 
 
+
+const { requireAuth } = require('../middleware/auth');
+
+router.get('/profile', requireAuth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT 
+          utilisateurs.id,
+          utilisateurs.email,
+          utilisateurs.nom,
+          utilisateurs.prenom,
+          array_agg(roles.nom) AS roles
+       FROM utilisateurs
+       LEFT JOIN utilisateur_roles 
+          ON utilisateur_roles.utilisateur_id = utilisateurs.id
+       LEFT JOIN roles 
+          ON roles.id = utilisateur_roles.role_id
+       WHERE utilisateurs.id = $1
+       GROUP BY utilisateurs.id`,
+      [req.user.id]
+    );
+
+    res.json({ user: result.rows[0] });
+
+  } catch (error) {
+    console.error('Erreur profil:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+
+
 module.exports = router;
